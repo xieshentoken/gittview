@@ -1,3 +1,6 @@
+import numpy as np
+import pandas as pd
+
 class Gitt():
     def __init__(self, path):
         self.path = path
@@ -13,8 +16,8 @@ class Gitt():
         for x in range(ll):
             if (pristine_data['比容量/mAh/g'].iloc[x] > 0)and(pristine_data['比容量/mAh/g'].iloc[x+1] == 0)and(pristine_data['电流/mA'].iloc[x+1] > 0):
                 cd = 0
-                dc = x
-                #  将充电放电数据分别存在两个DataFrame中，并统一index和测试时间
+                dc = x + 1
+                #  将充电放电数据分别存在两个DataFrame中，并统一index，重新计算测试时间
                 self.discharge_data = pristine_data.iloc[:dc]
                 self.discharge_data.index = np.arange(len(self.discharge_data))
                 self.discharge_data['测试时间/Sec'] = self.discharge_data['测试时间/Sec'] - self.discharge_data['测试时间/Sec'].iloc[0]
@@ -23,7 +26,7 @@ class Gitt():
                 self.charge_data['测试时间/Sec'] = self.charge_data['测试时间/Sec'] - self.charge_data['测试时间/Sec'].iloc[0]
                 break
             elif (pristine_data['比容量/mAh/g'].iloc[x] > 0)and(pristine_data['比容量/mAh/g'].iloc[x+1] == 0)and(pristine_data['电流/mA'].iloc[x+1] < 0):
-                cd = x
+                cd = x + 1
                 dc = 0
                 self.discharge_data = pristine_data.iloc[cd:]
                 self.discharge_data.index = np.arange(len(self.discharge_data))
@@ -33,7 +36,7 @@ class Gitt():
                 self.charge_data['测试时间/Sec'] = self.charge_data['测试时间/Sec'] - self.charge_data['测试时间/Sec'].iloc[0]
                 break
 
-    def diffus_fit(self, data, DROP):
+    def diffus_fit(self, data, tao, DROP, customize_Constant):
         length0 = len(data)-1
         E_tao = data['电压/V'].loc[[x for x in range(length0) if (data['电流/mA'].loc[x] != 0)and(data['电流/mA'].loc[x+1] == 0)]]
         E_s = data['电压/V'].loc[[x for x in range(length0) if (data['电流/mA'].loc[x] == 0)and(data['电流/mA'].loc[x+1] != 0)]]
@@ -43,8 +46,10 @@ class Gitt():
         index = np.arange(len(deta_Es))
         U = E_tao.iloc[DROP:DROP-1]
         U.index = index
-        Q = data['比容量/mAh/g'].loc[[x for x in range(length0) if (data['电流/mA'].loc[x] != 0)and(data['电流/mA'].loc[x+1] == 0)]]
+        Q = data['比容量/mAh/g'].loc[[x for x in range(length0) if (data['电流/mA'].loc[x] != 0)and(data['电流/mA'].loc[x+1] == 0)]].iloc[DROP:DROP-1]
         Q.index = index
         k = (deta_Es/deta_Etao)**2/tao
         k.index = index
-        return pd.concat([U, k, Q], axis=1)
+        result = pd.concat([U, k, Q], axis=1)
+        result.columns = ['电压/V', 'tEsEt', '比容量/mAh/g']
+        return result
