@@ -25,7 +25,7 @@ class App():
         self.density = 1
         self.DROP = 0
         self.customize_Constant = 2   #  待定
-        self.result = {'discharge': 0, 'charge': 1}
+        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
 
         self.rgb = ('#000000', 'black')
         
@@ -90,7 +90,7 @@ class App():
                 ('新建', (None, self.new_project)),
                 ('打开', (None, self.open_filename)),
                 ('另存为', OrderedDict([('CSV', (None, None)),
-                        ('Excel',(None, None))])),
+                        ('Excel',(None, self.saveToexcel))])),
                 ('-1', (None, None)),
                 ('退出', (None, self.master.quit)),
                 ]),
@@ -183,12 +183,12 @@ class App():
         elif (self.example)and(self.excel_path):
             pass
         fig, axs = plt.subplots(2,1)
-        axs[0].plot(self.example.pristine_data['t/s'], self.example.pristine_data['电压/V'], color='#8080c0')
-        axs[0].set_xlim(0, int(self.example.pristine_data['t/s'].max())+1)
+        axs[0].plot(self.example.pristine_data['测试时间/Sec'], self.example.pristine_data['电压/V'], color='#8080c0')
+        axs[0].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
         axs[0].set_xlabel('time (sec)')
         axs[0].set_ylabel('Potential (V)')
-        axs[1].plot(self.example.pristine_data['t/s'], self.example.pristine_data['电流/mA'], color='#ff8000')
-        axs[1].set_xlim(0, int(self.example.pristine_data['t/s'].max())+1)
+        axs[1].plot(self.example.pristine_data['测试时间/Sec'], self.example.pristine_data['电流/mA'], color='#ff8000')
+        axs[1].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
         axs[1].set_xlabel('time (sec)')
         axs[1].set_ylabel('Currents (mA)')
         axs[1].grid(False)
@@ -210,31 +210,27 @@ class App():
 
     def UD_plot(self):
         fig, ax = plt.subplots()
-        ax.plot(self.result['discharge']['电压/V'], self.result['discharge']['tEsEt'], 'c*-', linewidth=2)
-        # ax.plot(self.result['charge']['电压/V'], self.result['charge']['tEsEt'], 'c*-', color=self.rgb, linewidth=2)
+        ax.plot(self.result['discharge']['电压/V'], self.result['discharge']['tEsEt'], 'c*-', linewidth=2, label = 'Discharge')
+        ax.plot(self.result['charge']['电压/V'], self.result['charge']['tEsEt'], 'mo-',linewidth=2, label = 'Charge')
         ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
         ax.set_xlabel('Potential (V)')
         ax.set_ylabel('pi/4D/m^2rou^2')
+        ax.set_title('Potential-Diffusion Curves')
+        ax.legend()
         plt.show()
 
-    def save_data(self):
-        if self.fit_data_expand:
+    def saveToexcel(self):
+        if (len(self.result['discharge'])>0) and (len(self.result['charge'])>0):
             save_path = filedialog.asksaveasfilename(title='保存文件', 
             filetypes=[("office Excel", "*.xls")], # 只处理的文件类型
             initialdir='/Users/hsh/Desktop/')
             # writer = pd.ExcelWriter(save_path) 
             with pd.ExcelWriter(save_path+'.xls') as writer:
-                for fit_data, orig_data, v in zip(self.fit_data_expand, self.data_list, self.scan_rate):
-                    if v != 0:
-                        pd.concat([fit_data, orig_data['Current(mA)']], axis=1).to_excel(writer, sheet_name=str(v))
+                pd.concat([self.result['discharge'], self.result['charge']], axis=1).to_excel(writer, sheet_name='GITT analysis')
             # writer.save()
             # writer.close()
         else:
             yon = messagebox.askquestion(title='提示',message='结果为空，是否先进行数据拟合？')
-            if yon:
-                self.capac_diff_fit()
-            else:
-                pass
 
     def tao_set(self):
         # 调用askinteger函数生成一个让用户输入整数的对话框
