@@ -16,7 +16,7 @@ from process import Gitt
 
 def main():
     root = Tk()
-    root.title("gitt")
+    root.title("GittView")
     App(root)
     root.mainloop()
 
