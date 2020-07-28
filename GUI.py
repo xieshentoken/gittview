@@ -18,6 +18,7 @@ class App():
         self.master = master
         self.initWidgets()
 
+        self.excel_path = ''
         self.example = 0    # 用于保存实例化对象
         self.tao = 60       # 弛豫时间，单位：分钟min
         self.massload = 1   # 活性物质载量，单位：毫克mg
