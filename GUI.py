@@ -18,14 +18,14 @@ class App():
         self.master = master
         self.initWidgets()
 
-        self.example = 0
-        self.tao = 3600
-        self.massload = 1
-        self.actarea = 1
-        self.density = 1
-        self.DROP = 0
-        self.customize_Constant = 2   #  待定
-        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
+        self.example = 0    # 用于保存实例化对象
+        self.tao = 60       # 弛豫时间，单位：分钟min
+        self.massload = 1   # 活性物质载量，单位：毫克mg
+        self.actarea = 1    # 电化学活性面积，单位：平方厘米cm^2
+        self.density = 1    # 活性物质的密度，单位：立方厘米每克cm^3/g
+        self.DROP = 0       #  用于选择丢弃ΔEτ的值的位置，等于0时丢弃最后一个值，等于1时丢弃第一个值
+        self.customize_Constant = 2   # 用于截取IR降的位置，数值上等于脉冲开始后的点个数
+        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}   # 用于存储拟合结果
 
         self.rgb = ('#000000', 'black')
         
@@ -68,7 +68,7 @@ class App():
         work_button.pack(side=LEFT, ipadx=1, ipady=5, padx=5, pady=10)
         ud_button = Button(fm2, text = 'U-DLi+', 
             bd=3, width = 10, height = 1, 
-            command = self.UD_plot, 
+            command = self.UlgD_plot, 
             activebackground='black', activeforeground='white')
         ud_button.pack(side=LEFT, ipadx=1, ipady=5, padx=55, pady=10)
         new_button = Button(fm2, text = 'New Path', 
@@ -89,15 +89,15 @@ class App():
                 # 第二个元素是菜单对应的事件处理函数
                 ('新建', (None, self.new_project)),
                 ('打开', (None, self.open_filename)),
-                ('另存为', OrderedDict([('CSV', (None, None)),
+                ('另存为', OrderedDict([('CSV', (None, self.saveTocsv)),
                         ('Excel',(None, self.saveToexcel))])),
                 ('-1', (None, None)),
                 ('退出', (None, self.master.quit)),
                 ]),
             OrderedDict([('预览',(None, self.preview)), 
                 ('-1',(None, None)),
-                ('U-DLi+',(None, self.UD_plot)),
-                ('Q-DLi+ ',(None, None)),
+                ('U-DLi+',(None, self.UlgD_plot)),
+                ('Q-DLi+ ',(None, self.QlgD_plot)),
                 ('-2',(None, None)),
                 # 二级菜单
                 ('更多', OrderedDict([
@@ -108,7 +108,8 @@ class App():
                 ('-1',(None, None)),
                 ('活性物质载量m',(None,self.massLoad_set)),
                 ('电化学活性面积A',(None,self.actArea_set)),
-                ('活性物质密度ρ',(None,self.density_set))
+                ('活性物质密度ρ',(None,self.density_set)), 
+                ('选取IR降位置',(None,self.IR_set)),
                 ]),
             OrderedDict([('帮助主题',(None, self.original_data_preparation)),
                 ('-1',(None, None)),
@@ -153,18 +154,30 @@ class App():
     # 生成所有需要的图标
     def init_icons(self):
         pass
-        # self.master.filenew_icon = PhotoImage(name='E:/pydoc/tkinter/images/filenew.png')
-        # self.master.fileopen_icon = PhotoImage(name='E:/pydoc/tkinter/images/fileopen.png')
-        # self.master.save_icon = PhotoImage(name='E:/pydoc/tkinter/images/save.png')
-        # self.master.saveas_icon = PhotoImage(name='E:/pydoc/tkinter/images/saveas.png')
-        # self.master.signout_icon = PhotoImage(name='E:/pydoc/tkinter/images/signout.png')
+        '''self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
+        self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gitt\image\fileopen.png")
+        self.master.save_icon = PhotoImage(file=r"E:\pydoc\gitt\image\save.png")
+        self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gitt\image\saveas.png")
+        self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gitt\image\csv.png")
+        self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gitt\image\xls.png")
+        self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gitt\image\signout.png")
+        self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")'''
     # 新建项目
     def new_project(self):
         self.new_path()
+        self.tao = 60
+        self.massload = 1
+        self.actarea = 1
+        self.density = 1
+        self.customize_Constant = 2
 
     # 新建路径
     def new_path(self):
-        pass
+        self.excel_path = ''
+        self.excel_adr.set('')
+        self.DROP = 0
+        self.example = 0
+        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
 
     def open_filename(self):
         self.excel_path = ''
@@ -205,17 +218,31 @@ class App():
             pass
         self.example.cd_divide(self.example.pristine_data)
         self.DROP = int(self.DROPcheck.get())
-        self.result['discharge'] = self.example.diffus_fit(self.example.discharge_data, self.tao, self.DROP, self.customize_Constant)
-        self.result['charge'] = self.example.diffus_fit(self.example.charge_data, self.tao, self.DROP, self.customize_Constant)
 
-    def UD_plot(self):
+        self.result['discharge'] = self.example.diffus_fit(self.example.discharge_data, self.tao, 
+            self.massload, self.actarea, self.density, self.DROP, self.customize_Constant)
+        self.result['charge'] = self.example.diffus_fit(self.example.charge_data, self.tao, 
+            self.massload, self.actarea, self.density, self.DROP, self.customize_Constant)
+
+    def UlgD_plot(self):
         fig, ax = plt.subplots()
-        ax.plot(self.result['discharge']['电压/V'], self.result['discharge']['tEsEt'], 'c*-', linewidth=2, label = 'Discharge')
-        ax.plot(self.result['charge']['电压/V'], self.result['charge']['tEsEt'], 'mo-',linewidth=2, label = 'Charge')
+        ax.plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
+        ax.plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
         ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
         ax.set_xlabel('Potential (V)')
-        ax.set_ylabel('pi/4D/m^2rou^2')
+        ax.set_ylabel('log10(D) (cm^2/s)')
         ax.set_title('Potential-Diffusion Curves')
+        ax.legend()
+        plt.show()
+
+    def QlgD_plot(self):
+        fig, ax = plt.subplots()
+        ax.plot(self.result['discharge']['比容量/mAh/g'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
+        ax.plot(self.result['charge']['比容量/mAh/g'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
+        ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
+        ax.set_xlabel('比容量 (mAh/g)')
+        ax.set_ylabel('log10(D) (cm^2/s)')
+        ax.set_title('Capacity-Diffusion Curves')
         ax.legend()
         plt.show()
 
@@ -232,28 +259,40 @@ class App():
         else:
             yon = messagebox.askquestion(title='提示',message='结果为空，是否先进行数据拟合？')
 
+    def saveTocsv(self):
+        if (len(self.result['discharge'])>0) and (len(self.result['charge'])>0):
+            save_path = filedialog.asksaveasfilename(title='保存文件', 
+                filetypes=[("逗号分隔符文件", "*.csv")], # 只处理的文件类型
+                initialdir='/Users/hsh/Desktop/')
+            pd.concat([self.result['discharge'], self.result['charge']], axis=1).to_csv(save_bar_path + '.csv')
+        else:
+            messagebox.showinfo(title='警告',message='结果为空！')
+
     def tao_set(self):
-        # 调用askinteger函数生成一个让用户输入整数的对话框
-        self.tao = simpledialog.askinteger('输入弛豫时间(Sec)', '弛豫时间(Sec):',
-            initialvalue=self.tao, minvalue=1, maxvalue=36000)
+        self.tao = simpledialog.askfloat('输入弛豫时间(min)', '弛豫时间(min):',
+            initialvalue=self.tao, minvalue=0.001, maxvalue=36000)
 
     def massLoad_set(self):
-        self.massload = simpledialog.askinteger('输入活性物质载量(mg)', '活性物质载量(mg):',
+        self.massload = simpledialog.askfloat('输入活性物质载量(mg)', '活性物质载量(mg):',
             initialvalue=self.massload, minvalue=0.01, maxvalue=10000)
 
     def actArea_set(self):
-        self.actarea = simpledialog.askinteger('输入电化学活性面积(cm^2)', '电化学活性面积(cm^2):',
+        self.actarea = simpledialog.askfloat('输入电化学活性面积(cm^2)', '电化学活性面积(cm^2):',
             initialvalue=self.actarea, minvalue=0.01, maxvalue=10000)
 
     def density_set(self):
-        self.density = simpledialog.askinteger('输入活性物质密度(g/cm^3)', '活性物质密度(g/cm^3):',
+        self.density = simpledialog.askfloat('输入活性物质密度(g/cm^3)', '活性物质密度(g/cm^3):',
             initialvalue=self.density, minvalue=0.0001, maxvalue=10000)
+
+    def IR_set(self):
+        self.customize_Constant = simpledialog.askinteger('输入参数', '选取IR降位置',
+            initialvalue=self.customize_Constant, minvalue=0, maxvalue=10)
 
     def original_data_preparation(self):
         messagebox.showinfo(title='原始数据准备',message='从LAND导出一个完整GITT充放循环数据，只导出记录表，选择测试时间、电流、电压、比容量，其中时间单位为秒Sec，保存为Excel。')
 
     def show_help(self):
-        messagebox.showinfo(title='关于',message='离子导率由方程给出：\n' +
+        messagebox.showinfo(title='关于',message='离子导率由以下方程给出：\n' +
             'Dion = (4/π)*n*(m/A^2/ρ^2)*1/τ*(ΔEs/ΔEτ)^2\n' + 'n：反应过程参与电子数\n' + 
             'A：电化学活性面积\n' + 'τ：弛豫时间\n' + 'ΔEs：弛豫终压差\n' + 'ΔEτ：脉冲电势差')
 
