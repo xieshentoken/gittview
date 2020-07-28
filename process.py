@@ -43,23 +43,27 @@ class Gitt():
                 self.charge_data['测试时间/Sec'] = self.charge_data['测试时间/Sec'] - chargeT.iloc[0]
                 break
 
-    def diffus_fit(self, data, tao, DROP, customize_Constant):
+    def diffus_fit(self, data, tao, mass, area, density, DROP, customize_Constant):
         length0 = len(data)-1
         priU = data['电压/V']
         priI = data['电流/mA']
         capacity = data['比容量/mAh/g']
-        E_tao = priU.loc[[x for x in range(length0) if (priI.loc[x] != 0)and(priI.loc[x+1] == 0)]]
-        E_s = priU.loc[[x for x in range(length0) if (priI.loc[x] == 0)and(priI.loc[x+1] != 0)]]
-        E_R = priU.loc[[x+customize_Constant for x in range(length0) if (priI.loc[x] == 0)and(priI.loc[x+1] != 0)]]
+        E_tao = priU.loc[[x for x in range(length0) if ((priI.loc[x] != 0)and(priI.loc[x+1] == 0))or(x == length0-1)]]
+        E_s = priU.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
+        E_R = priU.loc[[x+customize_Constant for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
         deta_Es = E_s.diff().dropna()   # 前向差分并丢弃第一个空值
-        deta_Etao = E_tao.iloc[DROP:DROP-1].values - E_R.iloc[DROP:DROP-1].values
+        if DROP == 0:
+            deta_Etao = E_tao.iloc[:DROP-1].values - E_R.iloc[:DROP-1].values
+            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] != 0)and(priI.loc[x+1] == 0))or(x == length0-1)]].iloc[:DROP-1]
+        elif DROP == 1:
+            deta_Etao = E_tao.iloc[DROP:].values - E_R.iloc[DROP:].values    
+            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] != 0)and(priI.loc[x+1] == 0))or(x == length0-1)]].iloc[DROP:]
         index = np.arange(len(deta_Es))
-        U = E_tao.iloc[DROP:DROP-1]
+        U = E_s.iloc[:-1]
         U.index = index
-        Q = capacity.loc[[x for x in range(length0) if (priI.loc[x] != 0)and(priI.loc[x+1] == 0)]].iloc[DROP:DROP-1]
         Q.index = index
-        k = (deta_Es/deta_Etao)**2/tao
-        k.index = index
-        result = pd.concat([U, k, Q], axis=1)
-        result.columns = ['电压/V', 'tEsEt', '比容量/mAh/g']
+        D = 4*(deta_Es/deta_Etao)**2/(tao*60)/np.pi*(mass/1000*area)**2/density**2
+        D.index = index
+        result = pd.concat([U, D, Q], axis=1)
+        result.columns = ['电压/V', r'D/cm\+(2)·s\+(-1)', '比容量/mAh/g']
         return result
