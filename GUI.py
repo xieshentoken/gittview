@@ -88,17 +88,18 @@ class App():
         items = (OrderedDict([
                 # 每项对应一个菜单项，后面元组第一个元素是菜单图标，
                 # 第二个元素是菜单对应的事件处理函数
-                ('新建', (None, self.new_project)),
-                ('打开', (None, self.open_filename)),
-                ('另存为', OrderedDict([('CSV', (None, self.saveTocsv)),
-                        ('Excel',(None, self.saveToexcel))])),
+                ('新建', (self.master.filenew_icon, self.new_project)),
+                ('打开', (self.master.fileopen_icon, self.open_filename)),
+                ('另存为', OrderedDict([('CSV', (self.master.csv_icon, self.saveTocsv)),
+                        ('Excel',(self.master.xls_icon, self.saveToexcel))])),
                 ('-1', (None, None)),
-                ('退出', (None, self.master.quit)),
+                ('退出', (self.master.signout_icon, self.master.quit)),
                 ]),
-            OrderedDict([('预览',(None, self.preview)), 
+            OrderedDict([('预览',(self.master.preview_icon, self.preview)), 
                 ('-1',(None, None)),
                 ('U-DLi+',(None, self.UlgD_plot)),
                 ('Q-DLi+ ',(None, self.QlgD_plot)),
+                ('Q-R ',(None, self.QR_plot)),
                 ('-2',(None, None)),
                 # 二级菜单
                 ('更多', OrderedDict([
@@ -143,26 +144,26 @@ class App():
                             sm.add_separator()
                         else:
                             # 添加菜单项
-                            sm.add_command(label=sub_label,image=None,
+                            sm.add_command(label=sub_label,image=sub_dict[sub_label][0],
                                 command=sub_dict[sub_label][1], compound=LEFT)
                 elif label.startswith('-'):
                     # 添加分隔条
                     m.add_separator()
                 else:
                     # 添加菜单项
-                    m.add_command(label=label,image=None,
+                    m.add_command(label=label,image=tm[label][0],
                         command=tm[label][1], compound=LEFT)
     # 生成所有需要的图标
     def init_icons(self):
-        pass
-        '''self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
+        # pass
+        self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
         self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gitt\image\fileopen.png")
         self.master.save_icon = PhotoImage(file=r"E:\pydoc\gitt\image\save.png")
         self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gitt\image\saveas.png")
         self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gitt\image\csv.png")
         self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gitt\image\xls.png")
         self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gitt\image\signout.png")
-        self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")'''
+        self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")
     # 新建项目
     def new_project(self):
         self.new_path()
@@ -232,7 +233,7 @@ class App():
         ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
         ax.set_xlabel('Potential (V)')
         ax.set_ylabel('log10(D) (cm^2/s)')
-        ax.set_title('Potential-Diffusion Curves')
+        ax.set_title(self.excel_path.split('/')[-1])
         ax.legend()
         plt.show()
 
@@ -243,8 +244,24 @@ class App():
         ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
         ax.set_xlabel('比容量 (mAh/g)')
         ax.set_ylabel('log10(D) (cm^2/s)')
-        ax.set_title('Capacity-Diffusion Curves')
+        ax.set_title(self.excel_path.split('/')[-1])
         ax.legend()
+        plt.show()
+
+    def QR_plot(self):
+        fig, ax = plt.subplots(1,2)
+        ax[0].plot(self.result['discharge']['Capacity(R)/mAh/g'], np.log10(self.result['discharge']['Reaction resistance/Ohm/g']), 'c*-', linewidth=2, label = 'Discharge')
+        ax[1].plot(self.result['charge']['Capacity(R)/mAh/g'], np.log10(self.result['charge']['Reaction resistance/Ohm/g']), 'mo-',linewidth=2, label = 'Charge')
+        ax[0].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+        ax[1].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+        ax[0].set_xlabel('Capacity(R) (mAh/g)')
+        ax[0].set_ylabel('Reaction resistance (Ohm/g)')
+        ax[0].set_title(self.excel_path.split('/')[-1])
+        ax[1].set_xlabel('Capacity(R) (mAh/g)')
+        ax[1].set_ylabel('Reaction resistance (Ohm/g)')
+        ax[1].set_title(self.excel_path.split('/')[-1])
+        ax[0].legend()
+        ax[1].legend()
         plt.show()
 
     def saveToexcel(self):

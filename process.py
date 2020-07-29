@@ -65,8 +65,12 @@ class Gitt():
         E_s = priU.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
         E_R = priU.loc[[x+customize_Constant for x in range(length0-customize_Constant) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
         deta_Es = E_s.diff().dropna()   # 前向差分并丢弃第一个空值
-        # E_s.to_csv(r"C:\Users\Administrator\Desktop\Es.csv")
-        # E_tao.to_csv(r"C:\Users\Administrator\Desktop\Etao.csv")
+        # R_r用于保存反应电阻
+        Q_R = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
+        R_r = 1000*E_R/mass/priI.abs().max()
+        idx = np.arange(len(E_R))
+        Q_R.index = idx
+        R_r.index = idx
         if DROP == 0:
             deta_Etao = E_tao.iloc[:DROP-1].values - E_R.iloc[:DROP-1].values
             Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]].iloc[:DROP-1]
@@ -79,6 +83,6 @@ class Gitt():
         Q.index = index
         D = 4*(deta_Es/deta_Etao)**2/(tao*60)/np.pi*(mass/1000*area)**2/density**2
         D.index = index
-        result = pd.concat([U, D, Q], axis=1)
-        result.columns = ['电压/V', r'D/cm\+(2)·s\+(-1)', '比容量/mAh/g']
+        result = pd.concat([U, D, Q, Q_R, R_r], axis=1)
+        result.columns = ['电压/V', r'D/cm\+(2)·s\+(-1)', '比容量/mAh/g', 'Capacity(R)/mAh/g', 'Reaction resistance/Ohm/g']
         return result
