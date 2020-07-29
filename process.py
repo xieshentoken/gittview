@@ -66,9 +66,10 @@ class Gitt():
         E_R = priU.loc[[x+customize_Constant for x in range(length0-customize_Constant) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
         deta_Es = E_s.diff().dropna()   # 前向差分并丢弃第一个空值
         # R_r用于保存反应电阻
-        Q_R = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
-        R_r = 1000*E_R/mass/priI.abs().max()
         idx = np.arange(len(E_R))
+        E_R.index = E_s.index
+        Q_R = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
+        R_r = 1000000*np.abs(E_R-E_s)/mass/priI.abs().max()
         Q_R.index = idx
         R_r.index = idx
         if DROP == 0:
