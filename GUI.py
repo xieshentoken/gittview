@@ -1,4 +1,4 @@
-import re
+﻿import re
 import sys
 from collections import OrderedDict
 from itertools import permutations
@@ -67,9 +67,9 @@ class App():
             command = self.work, 
             activebackground='black', activeforeground='white')
         work_button.pack(side=LEFT, ipadx=1, ipady=5, padx=5, pady=10)
-        ud_button = Button(fm2, text = 'U-DLi+', 
+        ud_button = Button(fm2, text = 'Show All', 
             bd=3, width = 10, height = 1, 
-            command = self.UlgD_plot, 
+            command = self.all_plot, 
             activebackground='black', activeforeground='white')
         ud_button.pack(side=LEFT, ipadx=1, ipady=5, padx=55, pady=10)
         new_button = Button(fm2, text = 'New Path', 
@@ -102,9 +102,7 @@ class App():
                 ('Q-R ',(None, self.QR_plot)),
                 ('-2',(None, None)),
                 # 二级菜单
-                ('更多', OrderedDict([
-                    ('选择颜色',(None, self.select_color))
-                    ]))
+                ('Show All', (None, self.all_plot)),
                 ]),
             OrderedDict([('弛豫时间τ',(None,self.tao_set)),
                 ('-1',(None, None)),
@@ -227,55 +225,92 @@ class App():
             self.massload, self.actarea, self.density, self.DROP, self.customize_Constant)
 
     def UlgD_plot(self):
-        fig, ax = plt.subplots()
-        ax.plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
-        ax.plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
-        ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
-        ax.set_xlabel('Potential (V)')
-        ax.set_ylabel('log10(D) (cm^2/s)')
-        ax.set_title(self.excel_path.split('/')[-1])
-        ax.legend()
-        plt.show()
+        try:
+            fig, ax = plt.subplots()
+            ax.plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
+            ax.plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
+            ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
+            ax.set_xlabel('Potential (V)')
+            ax.set_ylabel('log10(D) (cm^2/s)')
+            ax.set_title(self.excel_path.split('/')[-1])
+            ax.legend()
+            plt.show()
+        except KeyError:
+            messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
 
     def QlgD_plot(self):
-        fig, ax = plt.subplots()
-        ax.plot(self.result['discharge']['比容量/mAh/g'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
-        ax.plot(self.result['charge']['比容量/mAh/g'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
-        ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
-        ax.set_xlabel('比容量 (mAh/g)')
-        ax.set_ylabel('log10(D) (cm^2/s)')
-        ax.set_title(self.excel_path.split('/')[-1])
-        ax.legend()
-        plt.show()
+        try:
+            fig, ax = plt.subplots()
+            ax.plot(self.result['discharge']['比容量/mAh/g'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
+            ax.plot(self.result['charge']['比容量/mAh/g'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
+            ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
+            ax.set_xlabel('比容量 (mAh/g)')
+            ax.set_ylabel('log10(D) (cm^2/s)')
+            ax.set_title(self.excel_path.split('/')[-1])
+            ax.legend()
+            plt.show()
+        except KeyError:
+            messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
 
     def QR_plot(self):
-        fig, ax = plt.subplots(1,2)
-        ax[0].plot(self.result['discharge']['Capacity(R)/mAh/g'], np.log10(self.result['discharge']['Reaction resistance/Ohm/g']), 'c*-', linewidth=2, label = 'Discharge')
-        ax[1].plot(self.result['charge']['Capacity(R)/mAh/g'], np.log10(self.result['charge']['Reaction resistance/Ohm/g']), 'mo-',linewidth=2, label = 'Charge')
-        ax[0].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
-        ax[1].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
-        ax[0].set_xlabel('Capacity(R) (mAh/g)')
-        ax[0].set_ylabel('Reaction resistance (Ohm/g)')
-        ax[0].set_title(self.excel_path.split('/')[-1])
-        ax[1].set_xlabel('Capacity(R) (mAh/g)')
-        ax[1].set_ylabel('Reaction resistance (Ohm/g)')
-        ax[1].set_title(self.excel_path.split('/')[-1])
-        ax[0].legend()
-        ax[1].legend()
-        plt.show()
+        try:
+            fig, ax = plt.subplots(1,2)
+            ax[0].plot(self.result['discharge']['Capacity(R)/mAh/g'], self.result['discharge']['Reaction resistance/Ohm/g'], 'c*-', linewidth=2, label = 'Discharge')
+            ax[1].plot(self.result['charge']['Capacity(R)/mAh/g'], self.result['charge']['Reaction resistance/Ohm/g'], 'mo-',linewidth=2, label = 'Charge')
+            ax[0].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+            ax[1].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+            ax[0].set_xlabel('Capacity(R) (mAh/g)')
+            ax[0].set_ylabel('Reaction resistance (Ohm/g)')
+            ax[0].set_title(self.excel_path.split('/')[-1])
+            ax[1].set_xlabel('Capacity(R) (mAh/g)')
+            ax[1].set_ylabel('Reaction resistance (Ohm/g)')
+            ax[1].set_title(self.excel_path.split('/')[-1])
+            ax[0].legend()
+            ax[1].legend()
+            plt.show()
+        except KeyError:
+            messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
+
+    def all_plot(self):
+        try:
+            fig, axs = plt.subplots(2, 2)
+            axs[0, 0].plot(self.example.discharge_data['测试时间/Sec'], self.example.discharge_data['电压/V'], label='Discharge', color='#8080c0')
+            axs[0, 0].plot(self.example.charge_data['测试时间/Sec'], self.example.charge_data['电压/V'], label='Charge', color='#ff8000')
+            # axs[0, 0].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
+            axs[0, 0].set_xlabel('time (sec)')
+            axs[0, 0].set_ylabel('Potential (V)')
+            axs[0, 0].set_title(self.excel_path.split('/')[-1])
+            axs[0, 1].plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
+            axs[0, 1].plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
+            axs[0, 1].set_xlim(0, float(self.result['discharge']['电压/V'].max())*1.1)
+            axs[0, 1].set_xlabel('Potential (V)')
+            axs[0, 1].set_ylabel('log10(D) (cm^2/s)')
+            axs[0, 1].set_title('U-lg(D)')
+            axs[1, 0].plot(self.result['discharge']['Capacity(R)/mAh/g'], self.result['discharge']['Reaction resistance/Ohm/g'], 'b*-', linewidth=2, label = 'Discharge')
+            axs[1, 1].plot(self.result['charge']['Capacity(R)/mAh/g'], self.result['charge']['Reaction resistance/Ohm/g'], 'ro-',linewidth=2, label = 'Charge')
+            axs[1, 0].set_xlim(0, float(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+            axs[1, 1].set_xlim(0, float(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+            axs[1, 0].set_xlabel('Capacity(R) (mAh/g)')
+            axs[1, 0].set_ylabel('Reaction resistance (Ohm/g)')
+            axs[1, 0].set_title('in situ reaction resistances')
+            axs[1, 1].set_xlabel('Capacity(R) (mAh/g)')
+            axs[1, 1].set_ylabel('')
+            for ax in axs.flat:
+                ax.legend()
+            fig.tight_layout()
+            plt.show()
+        except KeyError:
+            messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
 
     def saveToexcel(self):
         if (len(self.result['discharge'])>0) and (len(self.result['charge'])>0):
             save_path = filedialog.asksaveasfilename(title='保存文件', 
             filetypes=[("office Excel", "*.xls")], # 只处理的文件类型
             initialdir='/Users/hsh/Desktop/')
-            # writer = pd.ExcelWriter(save_path) 
             with pd.ExcelWriter(save_path+'.xls') as writer:
                 pd.concat([self.result['discharge'], self.result['charge']], axis=1).to_excel(writer, sheet_name='GITT analysis')
-            # writer.save()
-            # writer.close()
         else:
-            yon = messagebox.askquestion(title='提示',message='结果为空，是否先进行数据拟合？')
+            yon = messagebox.askquestion(title='提示',message='结果为空!')
 
     def saveTocsv(self):
         if (len(self.result['discharge'])>0) and (len(self.result['charge'])>0):
@@ -310,10 +345,6 @@ class App():
         messagebox.showinfo(title='原始数据准备',message='从LAND导出一个完整GITT充放循环数据，只导出记录表，选择测试时间、电流、电压、比容量，其中时间单位为秒Sec，保存为Excel。')
 
     def show_help(self):
-        messagebox.showinfo(title='关于',message='离子导率由以下方程给出：\n' +
+        messagebox.showinfo(title='关于',message='离子导率由Fick第二定律导出：\n' +
             'Dion = (4/π)*n*(m/A^2/ρ^2)*1/τ*(ΔEs/ΔEτ)^2\n' + 'n：反应过程参与电子数\n' + 
             'A：电化学活性面积\n' + 'τ：弛豫时间\n' + 'ΔEs：弛豫终压差\n' + 'ΔEτ：脉冲电势差')
-
-    def select_color(self):
-        self.rgb = colorchooser.askcolor(parent=self.master, title='选择线条颜色',
-            color = 'black')
