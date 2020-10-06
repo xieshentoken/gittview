@@ -62,22 +62,22 @@ class Gitt():
         priI = data['电流/mA']
         capacity = data['比容量/mAh/g']
         E_tao = priU.loc[[x for x in range(length0) if ((priI.loc[x] != 0)and(priI.loc[x+1] == 0))or((x == length0-1)and(priI.loc[x] != 0))]]
-        E_s = priU.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
-        E_R = priU.loc[[x+customize_Constant for x in range(length0-customize_Constant) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
+        E_s = priU.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or((capacity.loc[x] == 0)and(capacity.loc[x+1] != 0))]]
+        E_R = priU.loc[[x+customize_Constant for x in range(length0-customize_Constant) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or((capacity.loc[x] == 0)and(capacity.loc[x+1] != 0))]]
         deta_Es = E_s.diff().dropna()   # 前向差分并丢弃第一个空值
         # R_r用于保存反应电阻
         idx = np.arange(len(E_R))
         E_R.index = E_s.index
-        Q_R = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]]
+        Q_R = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or((capacity.loc[x] == 0)and(capacity.loc[x+1] != 0))]]
         R_r = 1000000*np.abs(E_R-E_s)/mass/priI.abs().max()
         Q_R.index = idx
         R_r.index = idx
         if DROP == 0:
             deta_Etao = E_tao.iloc[:DROP-1].values - E_R.iloc[:DROP-1].values
-            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]].iloc[:DROP-1]
+            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or((capacity.loc[x] == 0)and(capacity.loc[x+1] != 0))]].iloc[:DROP-1]
         elif DROP == 1:
             deta_Etao = E_tao.iloc[DROP:].values - E_R.iloc[DROP:].values    
-            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or(capacity.loc[x] == 0)]].iloc[DROP:]
+            Q = capacity.loc[[x for x in range(length0) if ((priI.loc[x] == 0)and(priI.loc[x+1] != 0))or((capacity.loc[x] == 0)and(capacity.loc[x+1] != 0))]].iloc[DROP:]
         index = np.arange(len(deta_Es))
         U = E_s.iloc[:-1]
         U.index = index
