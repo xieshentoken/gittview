@@ -29,7 +29,7 @@ class App():
         self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
         self.results = []   # 用于存储拟合结果
 
-        self.rgb = ('#000000', 'black')
+        self.hsl = ('blue', '#B03060')
         
     def initWidgets(self):
         # 初始化菜单、工具条用到的图标
@@ -102,8 +102,9 @@ class App():
                 ('Q-DLi+ ',(None, self.QlgD_plot)),
                 ('Q-R ',(None, self.QR_plot)),
                 ('-2',(None, None)),
-                # 二级菜单
                 ('Show All', (None, self.all_plot)),
+                ('-3',(None, None)),
+                ('选择颜色', (None, self.select_color)),
                 ]),
             OrderedDict([('输入测试参数',(None,self.input_para)),
                 ('-1',(None, None)),
@@ -152,14 +153,14 @@ class App():
     # 生成所有需要的图标
     def init_icons(self):
         pass
-        # self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
-        # self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gitt\image\fileopen.png")
-        # self.master.save_icon = PhotoImage(file=r"E:\pydoc\gitt\image\save.png")
-        # self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gitt\image\saveas.png")
-        # self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gitt\image\csv.png")
-        # self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gitt\image\xls.png")
-        # self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gitt\image\signout.png")
-        # self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")
+        # self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\filenew.png")
+        # self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\fileopen.png")
+        # self.master.save_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\save.png")
+        # self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\saveas.png")
+        # self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\csv.png")
+        # self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\xls.png")
+        # self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\signout.png")
+        # self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gittview2.0\image\view.png")
     # 新建项目
     def new_project(self):
         self.new_path()
@@ -168,6 +169,7 @@ class App():
         self.actarea = [1,1,1,1,1,1,1] 
         self.density = [1,1,1,1,1,1,1] 
         self.customize_Constant = 2
+        self.hsl = ('blue', '#B03060')
 
     # 新建路径
     def new_path(self):
@@ -184,7 +186,6 @@ class App():
         self.excel_path = filedialog.askopenfilenames(title='选择一个或多个excel文件',
             filetypes=[('Excel文件', '*.xlsx'), ('Excel 文件', '*.xls')], # 只处理的文件类型
             initialdir=r'C:/Users/Administrator/Desktop') # 初始目录
-            # initialdir=r'G:\测试结果\battery\NiSSe\GITT') # 初始目录
         self.excel_adr.set(self.excel_path)
 
     def preview(self):
@@ -198,13 +199,15 @@ class App():
         elif (self.examples)and(self.excel_path):
             pass
         fig, axs = plt.subplots(2,1)
-        color0='#8080c0'
-        color1='#ff8000'
+        color0=self.hsl[1]
+        color1=self.loop_pick_color(color0, 1.5)
         for i, example in enumerate(self.examples):
             color00 = self.loop_pick_color(color0, i)
             color11 = self.loop_pick_color(color1, i)
-            axs[0].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电压/V'], color=color00, linewidth = 1, alpha=0.5)
-            axs[1].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电流/mA'], color=color11, linewidth = 1, alpha=0.5)
+            axs[0].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电压/V'], 
+            color=color00, linewidth = 1, alpha=0.5, label=excel_path.split('/')[-1][:15])
+            axs[1].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电流/mA'], 
+            color=color11, linewidth = 1, alpha=0.5, label=excel_path.split('/')[-1][:15])
         axs[0].set_xlabel('time (sec)')
         axs[0].set_ylabel('Potential (V)')
         axs[1].set_xlabel('time (sec)')
@@ -236,8 +239,8 @@ class App():
 
     def UlgD_plot(self):
         try:
-            color0 = '#B03060'
-            color1 = '#3D59AB'
+            color0=self.hsl[1]
+            color1=self.loop_pick_color(color0, 1.5)
             fig, ax = plt.subplots()
             for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
                 color00 = self.loop_pick_color(color0, i)
@@ -255,8 +258,8 @@ class App():
 
     def QlgD_plot(self):
         try:
-            color0 = '#B03060'
-            color1 = '#3D59AB'
+            color0=self.hsl[1]
+            color1=self.loop_pick_color(color0, 1.5)
             fig, ax = plt.subplots()
             for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
                 color00 = self.loop_pick_color(color0, i)
@@ -276,8 +279,8 @@ class App():
 
     def QR_plot(self):
         try:
-            color0 = '#B03060'
-            color1 = '#3D59AB'
+            color0=self.hsl[1]
+            color1=self.loop_pick_color(color0, 1.5)
             fig, ax = plt.subplots(1,2)
             for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
                 color00 = self.loop_pick_color(color0, i)
@@ -300,12 +303,18 @@ class App():
 
     def all_plot(self):
         try:
-            color0 = '#8080c0'
-            color1 = '#ff8000'
-            color2 = '#B03060'
-            color3 = '#3D59AB'
-            color4 = '#DA70D6'
-            color5 = '#7B68EE'
+            # color0 = '#8080c0'
+            # color1 = '#ff8000'
+            # color2 = '#B03060'
+            # color3 = '#3D59AB'
+            # color4 = '#DA70D6'
+            # color5 = '#7B68EE'
+            color0 = self.hsl[1]
+            color1 = self.loop_pick_color(color0, 2.39)
+            color2 = self.loop_pick_color(color0, 3.8)
+            color3 = self.loop_pick_color(color0, 4.2)
+            color4 = self.loop_pick_color(color0, 5.6)
+            color5 = self.loop_pick_color(color0, 7.3)
             fig, axs = plt.subplots(2, 2)
             for i, excel_path, example, result in zip(range(0,len(self.excel_path)), self.excel_path, self.examples, self.results):
                 color00 = self.loop_pick_color(color0, i)
@@ -315,17 +324,17 @@ class App():
                 color44 = self.loop_pick_color(color4, i)
                 color55 = self.loop_pick_color(color5, i)
                 axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], 
-                label=excel_path.split('/')[-1][:15]+'-Discharge', color=color00)
+                label=excel_path.split('/')[-1][:15], color=color00, alpha=0.5)
                 axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], 
-                label=excel_path.split('/')[-1][:15]+'-Charge', color=color11)
+                label=None, color=color00, alpha=0.5)
                 axs[0, 1].plot(result['discharge']['电压/V'], np.log10(result['discharge'][r'D/cm\+(2)·s\+(-1)']), 
                 color=color22, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
                 axs[0, 1].plot(result['charge']['电压/V'], np.log10(result['charge'][r'D/cm\+(2)·s\+(-1)']), 
                 color=color33, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
                 axs[1, 0].plot(result['discharge']['Capacity(R)/mAh/g'], result['discharge']['Reaction resistance/Ohm/g'], 
-                color=color44, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1].split('.')[0])
+                color=color44, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15])
                 axs[1, 1].plot(result['charge']['Capacity(R)/mAh/g'], result['charge']['Reaction resistance/Ohm/g'], 
-                color=color55, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1].split('.')[0])
+                color=color55, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15])
             axs[0, 0].set_xlabel('time (sec)')
             axs[0, 0].set_ylabel('Potential (V)')
             axs[0, 1].set_xlabel('Potential (V)')
@@ -380,11 +389,19 @@ class App():
 
     # 在色环上隔80˚取色,仅改变色相，不改变明度和饱和度
     def loop_pick_color(self, color, i):
-        if (int(color[1:3], 16)+56*i) <= 255:
-            picked_color = '#'+str(hex(int(color[1:3], 16)+56*i)[2:])+color[3:]
+        val_10 = (int(color[1:3], 16)+int(56*i))%256
+        if len(str(hex(val_10))) == 4:
+            picked_color = '#'+str(hex(val_10))[2:]+color[3:]
+        elif len(str(hex(val_10))) == 3:
+            picked_color = '#'+'0'+str(hex(val_10))[-1]+color[3:]
         else:
-            picked_color = '#'+str(hex(int(color[1:3], 16)+56*i-256)[2:])+color[3:]
+            picked_color = color
+            print(str(hex(val_10)))
         return picked_color
+
+    def select_color(self):
+        self.hsl = colorchooser.askcolor(parent=self.master, title='选择线条颜色',
+            color = '#B03060')
 
     def IR_set(self):
         self.customize_Constant = simpledialog.askinteger('输入参数', '选取IR降位置',
