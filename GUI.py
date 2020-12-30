@@ -1,4 +1,4 @@
-﻿import re
+import re
 import sys
 from collections import OrderedDict
 from itertools import permutations
@@ -18,15 +18,16 @@ class App():
         self.master = master
         self.initWidgets()
 
-        self.excel_path = ''
-        self.example = 0    # 用于保存实例化对象
-        self.tao = 60       # 弛豫时间，单位：分钟min
-        self.massload = 1   # 活性物质载量，单位：毫克mg
-        self.actarea = 1    # 电化学活性面积，单位：平方厘米cm^2
-        self.density = 1    # 活性物质的密度，单位：立方厘米每克cm^3/g
+        self.excel_path = tuple()
+        self.examples = []    # 用于保存实例化对象
+        self.tao = [60,60,60,60,60,60,60]  # 弛豫时间，单位：分钟min
+        self.massload = [1,1,1,1,1,1,1]    # 活性物质载量，单位：毫克mg
+        self.actarea = [1,1,1,1,1,1,1]     # 电化学活性面积，单位：平方厘米cm^2
+        self.density = [1,1,1,1,1,1,1]     # 活性物质的密度，单位：立方厘米每克cm^3/g
         self.DROP = 0       #  用于选择丢弃ΔEτ的值的位置，等于0时丢弃最后一个值，等于1时丢弃第一个值
         self.customize_Constant = 2   # 用于截取IR降的位置，数值上等于脉冲开始后的点个数
-        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}   # 用于存储拟合结果
+        self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
+        self.results = []   # 用于存储拟合结果
 
         self.rgb = ('#000000', 'black')
         
@@ -88,14 +89,14 @@ class App():
         items = (OrderedDict([
                 # 每项对应一个菜单项，后面元组第一个元素是菜单图标，
                 # 第二个元素是菜单对应的事件处理函数
-                ('新建', (self.master.filenew_icon, self.new_project)),
-                ('打开', (self.master.fileopen_icon, self.open_filename)),
-                ('另存为', OrderedDict([('CSV', (self.master.csv_icon, self.saveTocsv)),
-                        ('Excel',(self.master.xls_icon, self.saveToexcel))])),
+                ('新建', (None, self.new_project)),
+                ('打开', (None, self.open_filename)),
+                ('另存为', OrderedDict([('CSV', (None, self.saveTocsv)),
+                        ('Excel',(None, self.saveToexcel))])),
                 ('-1', (None, None)),
-                ('退出', (self.master.signout_icon, self.master.quit)),
+                ('退出', (None, self.master.quit)),
                 ]),
-            OrderedDict([('预览',(self.master.preview_icon, self.preview)), 
+            OrderedDict([('预览',(None, self.preview)), 
                 ('-1',(None, None)),
                 ('U-DLi+',(None, self.UlgD_plot)),
                 ('Q-DLi+ ',(None, self.QlgD_plot)),
@@ -104,11 +105,8 @@ class App():
                 # 二级菜单
                 ('Show All', (None, self.all_plot)),
                 ]),
-            OrderedDict([('弛豫时间τ',(None,self.tao_set)),
+            OrderedDict([('输入测试参数',(None,self.input_para)),
                 ('-1',(None, None)),
-                ('活性物质载量m',(None,self.massLoad_set)),
-                ('电化学活性面积A',(None,self.actArea_set)),
-                ('活性物质密度ρ',(None,self.density_set)), 
                 ('选取IR降位置',(None,self.IR_set)),
                 ]),
             OrderedDict([('帮助主题',(None, self.original_data_preparation)),
@@ -153,55 +151,62 @@ class App():
                         command=tm[label][1], compound=LEFT)
     # 生成所有需要的图标
     def init_icons(self):
-        # pass
-        self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
-        self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gitt\image\fileopen.png")
-        self.master.save_icon = PhotoImage(file=r"E:\pydoc\gitt\image\save.png")
-        self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gitt\image\saveas.png")
-        self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gitt\image\csv.png")
-        self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gitt\image\xls.png")
-        self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gitt\image\signout.png")
-        self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")
+        pass
+        # self.master.filenew_icon = PhotoImage(file=r"E:\pydoc\gitt\image\filenew.png")
+        # self.master.fileopen_icon = PhotoImage(file=r"E:\pydoc\gitt\image\fileopen.png")
+        # self.master.save_icon = PhotoImage(file=r"E:\pydoc\gitt\image\save.png")
+        # self.master.saveas_icon = PhotoImage(file=r"E:\pydoc\gitt\image\saveas.png")
+        # self.master.csv_icon = PhotoImage(file=r"E:\pydoc\gitt\image\csv.png")
+        # self.master.xls_icon = PhotoImage(file=r"E:\pydoc\gitt\image\xls.png")
+        # self.master.signout_icon = PhotoImage(file=r"E:\pydoc\gitt\image\signout.png")
+        # self.master.preview_icon = PhotoImage(file=r"E:\pydoc\gitt\image\view.png")
     # 新建项目
     def new_project(self):
         self.new_path()
-        self.tao = 60
-        self.massload = 1
-        self.actarea = 1
-        self.density = 1
+        self.tao = [60,60,60,60,60,60,60] 
+        self.massload = [1,1,1,1,1,1,1] 
+        self.actarea = [1,1,1,1,1,1,1] 
+        self.density = [1,1,1,1,1,1,1] 
         self.customize_Constant = 2
 
     # 新建路径
     def new_path(self):
-        self.excel_path = ''
+        self.excel_path = tuple()
         self.excel_adr.set('')
         self.DROP = 0
-        self.example = 0
+        self.examples = []
         self.result = {'discharge': pd.DataFrame(), 'charge': pd.DataFrame()}
+        self.results = []
 
     def open_filename(self):
-        self.excel_path = ''
+        self.excel_path = ()
         # 调用askopenfile方法获取打开的文件名
-        self.excel_path = filedialog.askopenfilename(title='打开文件',
+        self.excel_path = filedialog.askopenfilenames(title='选择一个或多个excel文件',
             filetypes=[('Excel文件', '*.xlsx'), ('Excel 文件', '*.xls')], # 只处理的文件类型
-            initialdir=r'G:\测试结果\battery\rP\GITT') # 初始目录
+            initialdir=r'C:/Users/Administrator/Desktop') # 初始目录
+            # initialdir=r'G:\测试结果\battery\NiSSe\GITT') # 初始目录
         self.excel_adr.set(self.excel_path)
 
     def preview(self):
-        if (self.example == 0)and(self.excel_path):
-            self.example = Gitt(self.excel_path)
-            self.example.read_data()
-        elif self.excel_path == '':
+        if (len(self.examples) == 0)and(self.excel_path):
+            for data_path in self.excel_path:
+                example = Gitt(data_path)
+                example.read_data()
+                self.examples.append(example)
+        elif len(self.excel_path) == 0:
             messagebox.showinfo(title='警告',message='请检查文件是否存在！')
-        elif (self.example)and(self.excel_path):
+        elif (self.examples)and(self.excel_path):
             pass
         fig, axs = plt.subplots(2,1)
-        axs[0].plot(self.example.pristine_data['测试时间/Sec'], self.example.pristine_data['电压/V'], color='#8080c0')
-        axs[0].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
+        color0='#8080c0'
+        color1='#ff8000'
+        for i, example in enumerate(self.examples):
+            color00 = self.loop_pick_color(color0, i)
+            color11 = self.loop_pick_color(color1, i)
+            axs[0].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电压/V'], color=color00, linewidth = 1, alpha=0.5)
+            axs[1].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电流/mA'], color=color11, linewidth = 1, alpha=0.5)
         axs[0].set_xlabel('time (sec)')
         axs[0].set_ylabel('Potential (V)')
-        axs[1].plot(self.example.pristine_data['测试时间/Sec'], self.example.pristine_data['电流/mA'], color='#ff8000')
-        axs[1].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
         axs[1].set_xlabel('time (sec)')
         axs[1].set_ylabel('Currents (mA)')
         axs[1].grid(False)
@@ -209,30 +214,40 @@ class App():
         plt.show()
 
     def work(self):
-        if (self.example == 0)and(self.excel_path):
-            self.example = Gitt(self.excel_path)
-            self.example.read_data()
-        elif self.excel_path == '':
+        if (len(self.examples) == 0)and(self.excel_path):
+            for data_path in self.excel_path:
+                example = Gitt(data_path)
+                example.read_data()
+                self.examples.append(example)
+        elif len(self.excel_path) == 0:
             messagebox.showinfo(title='警告',message='请检查文件是否存在！')
-        elif (self.example)and(self.excel_path):
+        elif (self.examples)and(self.excel_path):
             pass
-        self.example.cd_divide(self.example.pristine_data)
         self.DROP = int(self.DROPcheck.get())
+        for example, t, m, a, p in zip(self.examples, self.tao, self.massload, self.actarea, self.density):
+            example.cd_divide(example.pristine_data)
 
-        self.result['discharge'] = self.example.diffus_fit(self.example.discharge_data, self.tao, 
-            self.massload, self.actarea, self.density, self.DROP, self.customize_Constant)
-        self.result['charge'] = self.example.diffus_fit(self.example.charge_data, self.tao, 
-            self.massload, self.actarea, self.density, self.DROP, self.customize_Constant)
+            self.result['discharge'] = example.diffus_fit(example.discharge_data, t, 
+                m, a, p, self.DROP, self.customize_Constant)
+            self.result['charge'] = example.diffus_fit(example.charge_data, t, 
+                m, a, p, self.DROP, self.customize_Constant)
+
+            self.results.append(self.result.copy())
 
     def UlgD_plot(self):
         try:
+            color0 = '#B03060'
+            color1 = '#3D59AB'
             fig, ax = plt.subplots()
-            ax.plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
-            ax.plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
-            ax.set_xlim(0, int(self.result['discharge']['电压/V'].max())+1)
+            for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
+                color00 = self.loop_pick_color(color0, i)
+                color11 = self.loop_pick_color(color1, i)
+                ax.plot(result['discharge']['电压/V'], np.log10(result['discharge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color00, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
+                ax.plot(result['charge']['电压/V'], np.log10(result['charge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color11, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
             ax.set_xlabel('Potential (V)')
             ax.set_ylabel('log10(D) (cm^2/s)')
-            ax.set_title(self.excel_path.split('/')[-1])
             ax.legend()
             plt.show()
         except KeyError:
@@ -240,13 +255,20 @@ class App():
 
     def QlgD_plot(self):
         try:
+            color0 = '#B03060'
+            color1 = '#3D59AB'
             fig, ax = plt.subplots()
-            ax.plot(self.result['discharge']['比容量/mAh/g'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
-            ax.plot(self.result['charge']['比容量/mAh/g'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
-            ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
+            for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
+                color00 = self.loop_pick_color(color0, i)
+                color11 = self.loop_pick_color(color1, i)
+                ax.plot(result['discharge']['比容量/mAh/g'], np.log10(result['discharge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color00, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
+                ax.plot(result['charge']['比容量/mAh/g'], np.log10(result['charge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color11, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
+            # ax.set_xlim(0, int(self.result['discharge']['比容量/mAh/g'].max())*1.1)
             ax.set_xlabel('比容量 (mAh/g)')
             ax.set_ylabel('log10(D) (cm^2/s)')
-            ax.set_title(self.excel_path.split('/')[-1])
+            # ax.set_title(self.excel_path.split('/')[-1])
             ax.legend()
             plt.show()
         except KeyError:
@@ -254,17 +276,22 @@ class App():
 
     def QR_plot(self):
         try:
+            color0 = '#B03060'
+            color1 = '#3D59AB'
             fig, ax = plt.subplots(1,2)
-            ax[0].plot(self.result['discharge']['Capacity(R)/mAh/g'], self.result['discharge']['Reaction resistance/Ohm/g'], 'c*-', linewidth=2, label = 'Discharge')
-            ax[1].plot(self.result['charge']['Capacity(R)/mAh/g'], self.result['charge']['Reaction resistance/Ohm/g'], 'mo-',linewidth=2, label = 'Charge')
-            ax[0].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
-            ax[1].set_xlim(0, int(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
+            for i, excel_path, result in zip(range(0,len(self.excel_path)), self.excel_path, self.results):
+                color00 = self.loop_pick_color(color0, i)
+                color11 = self.loop_pick_color(color1, i)
+                ax[0].plot(result['discharge']['Capacity(R)/mAh/g'], result['discharge']['Reaction resistance/Ohm/g'], 
+                color=color00, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
+                ax[1].plot(result['charge']['Capacity(R)/mAh/g'], result['charge']['Reaction resistance/Ohm/g'], 
+                color=color11, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
             ax[0].set_xlabel('Capacity(R) (mAh/g)')
             ax[0].set_ylabel('Reaction resistance (Ohm/g)')
-            ax[0].set_title(self.excel_path.split('/')[-1])
+            ax[0].set_title('Discharge')
             ax[1].set_xlabel('Capacity(R) (mAh/g)')
             ax[1].set_ylabel('Reaction resistance (Ohm/g)')
-            ax[1].set_title(self.excel_path.split('/')[-1])
+            ax[1].set_title('Charge')
             ax[0].legend()
             ax[1].legend()
             plt.show()
@@ -273,26 +300,41 @@ class App():
 
     def all_plot(self):
         try:
+            color0 = '#8080c0'
+            color1 = '#ff8000'
+            color2 = '#B03060'
+            color3 = '#3D59AB'
+            color4 = '#DA70D6'
+            color5 = '#7B68EE'
             fig, axs = plt.subplots(2, 2)
-            axs[0, 0].plot(self.example.discharge_data['测试时间/Sec'], self.example.discharge_data['电压/V'], label='Discharge', color='#8080c0')
-            axs[0, 0].plot(self.example.charge_data['测试时间/Sec'], self.example.charge_data['电压/V'], label='Charge', color='#ff8000')
-            # axs[0, 0].set_xlim(0, int(self.example.pristine_data['测试时间/Sec'].max())+1)
+            for i, excel_path, example, result in zip(range(0,len(self.excel_path)), self.excel_path, self.examples, self.results):
+                color00 = self.loop_pick_color(color0, i)
+                color11 = self.loop_pick_color(color1, i)
+                color22 = self.loop_pick_color(color2, i)
+                color33 = self.loop_pick_color(color3, i)
+                color44 = self.loop_pick_color(color4, i)
+                color55 = self.loop_pick_color(color5, i)
+                axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], 
+                label=excel_path.split('/')[-1][:15]+'-Discharge', color=color00)
+                axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], 
+                label=excel_path.split('/')[-1][:15]+'-Charge', color=color11)
+                axs[0, 1].plot(result['discharge']['电压/V'], np.log10(result['discharge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color22, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
+                axs[0, 1].plot(result['charge']['电压/V'], np.log10(result['charge'][r'D/cm\+(2)·s\+(-1)']), 
+                color=color33, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
+                axs[1, 0].plot(result['discharge']['Capacity(R)/mAh/g'], result['discharge']['Reaction resistance/Ohm/g'], 
+                color=color44, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1].split('.')[0])
+                axs[1, 1].plot(result['charge']['Capacity(R)/mAh/g'], result['charge']['Reaction resistance/Ohm/g'], 
+                color=color55, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1].split('.')[0])
             axs[0, 0].set_xlabel('time (sec)')
             axs[0, 0].set_ylabel('Potential (V)')
-            axs[0, 0].set_title(self.excel_path.split('/')[-1])
-            axs[0, 1].plot(self.result['discharge']['电压/V'], np.log10(self.result['discharge'][r'D/cm\+(2)·s\+(-1)']), 'c*-', linewidth=2, label = 'Discharge')
-            axs[0, 1].plot(self.result['charge']['电压/V'], np.log10(self.result['charge'][r'D/cm\+(2)·s\+(-1)']), 'mo-',linewidth=2, label = 'Charge')
-            axs[0, 1].set_xlim(0, float(self.result['discharge']['电压/V'].max())*1.1)
             axs[0, 1].set_xlabel('Potential (V)')
             axs[0, 1].set_ylabel('log10(D) (cm^2/s)')
             axs[0, 1].set_title('U-lg(D)')
-            axs[1, 0].plot(self.result['discharge']['Capacity(R)/mAh/g'], self.result['discharge']['Reaction resistance/Ohm/g'], 'b*-', linewidth=2, label = 'Discharge')
-            axs[1, 1].plot(self.result['charge']['Capacity(R)/mAh/g'], self.result['charge']['Reaction resistance/Ohm/g'], 'ro-',linewidth=2, label = 'Charge')
-            axs[1, 0].set_xlim(0, float(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
-            axs[1, 1].set_xlim(0, float(self.result['discharge']['Capacity(R)/mAh/g'].max())*1.1)
             axs[1, 0].set_xlabel('Capacity(R) (mAh/g)')
-            axs[1, 0].set_ylabel('Reaction resistance (Ohm/g)')
-            axs[1, 0].set_title('in situ reaction resistances')
+            axs[1, 0].set_ylabel('in-situ Reaction resistance (Ohm/g)')
+            axs[1, 0].set_title('Discharge Process')
+            axs[1, 1].set_title('Charge Process')
             axs[1, 1].set_xlabel('Capacity(R) (mAh/g)')
             axs[1, 1].set_ylabel('')
             for ax in axs.flat:
@@ -307,8 +349,11 @@ class App():
             save_path = filedialog.asksaveasfilename(title='保存文件', 
             filetypes=[("office Excel", "*.xls")], # 只处理的文件类型
             initialdir='/Users/hsh/Desktop/')
-            with pd.ExcelWriter(save_path+'.xls') as writer:
-                pd.concat([self.result['discharge'], self.result['charge']], axis=1).to_excel(writer, sheet_name='GITT analysis')
+            for path, result in zip(self.excel_path, self.results):
+                tit = path.split('/')[-1].split('.')[0]
+                with pd.ExcelWriter(save_path+tit+'.xls') as writer:
+                    pd.concat([result['discharge'], result['charge']], axis=1
+                    ).to_excel(writer, sheet_name='GITT analysis')
         else:
             yon = messagebox.askquestion(title='提示',message='结果为空!')
 
@@ -317,25 +362,29 @@ class App():
             save_path = filedialog.asksaveasfilename(title='保存文件', 
                 filetypes=[("逗号分隔符文件", "*.csv")], # 只处理的文件类型
                 initialdir='/Users/hsh/Desktop/')
-            pd.concat([self.result['discharge'], self.result['charge']], axis=1).to_csv(save_bar_path + '.csv')
+            for path, result in zip(self.excel_path, self.results):
+                tit = path.split('/')[-1].split('.')[0]
+                pd.concat([result['discharge'], result['charge']], axis=1).to_csv(save_path+tit+'.csv')
         else:
             messagebox.showinfo(title='警告',message='结果为空！')
 
-    def tao_set(self):
-        self.tao = simpledialog.askfloat('输入弛豫时间(min)', '弛豫时间(min):',
-            initialvalue=self.tao, minvalue=0.001, maxvalue=36000)
+    def input_para(self):
+        if self.excel_path:
+            kk = TestPara(self.master, self.excel_path)
+        else:
+            messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
+        self.tao = kk.tao
+        self.massload = kk.massload
+        self.actarea = kk.actArea
+        self.density = kk.density
 
-    def massLoad_set(self):
-        self.massload = simpledialog.askfloat('输入活性物质载量(mg)', '活性物质载量(mg):',
-            initialvalue=self.massload, minvalue=0.01, maxvalue=10000)
-
-    def actArea_set(self):
-        self.actarea = simpledialog.askfloat('输入电化学活性面积(cm^2)', '电化学活性面积(cm^2):',
-            initialvalue=self.actarea, minvalue=0.01, maxvalue=10000)
-
-    def density_set(self):
-        self.density = simpledialog.askfloat('输入活性物质密度(g/cm^3)', '活性物质密度(g/cm^3):',
-            initialvalue=self.density, minvalue=0.0001, maxvalue=10000)
+    # 在色环上隔80˚取色,仅改变色相，不改变明度和饱和度
+    def loop_pick_color(self, color, i):
+        if (int(color[1:3], 16)+56*i) <= 255:
+            picked_color = '#'+str(hex(int(color[1:3], 16)+56*i)[2:])+color[3:]
+        else:
+            picked_color = '#'+str(hex(int(color[1:3], 16)+56*i-256)[2:])+color[3:]
+        return picked_color
 
     def IR_set(self):
         self.customize_Constant = simpledialog.askinteger('输入参数', '选取IR降位置',
@@ -348,3 +397,169 @@ class App():
         messagebox.showinfo(title='关于',message='离子导率由Fick第二定律导出：\n' +
             'Dion = (4/π)*n*(m/A^2/ρ^2)*1/τ*(ΔEs/ΔEτ)^2\n' + 'n：反应过程参与电子数\n' + 
             'A：电化学活性面积\n' + 'τ：弛豫时间\n' + 'ΔEs：弛豫终压差\n' + 'ΔEτ：脉冲电势差')
+
+    # 自定义对话框类，继承Toplevel------------------------------------------------------------------------------------------
+    # 创建弹窗，用于输入各测试数据文件下的其他测试参数：弛豫时间、质量载量、电化学活性面积和活性物质密度
+class TestPara(Toplevel):
+    # 定义构造方法
+    def __init__(self, parent, excel_path, title = '输入各数据下对应测试参数', modal=False):
+        Toplevel.__init__(self, parent)
+        self.transient(parent)
+        # 设置标题
+        if title: self.title(title)
+        self.parent = parent
+        self.excel_path = excel_path
+        # 创建对话框的主体内容
+        frame = Frame(self)
+        # 调用init_widgets方法来初始化对话框界面
+        self.initial_focus = self.init_widgets(frame)
+        frame.pack(padx=5, pady=5)
+        # 调用init_buttons方法初始化对话框下方的按钮
+        self.init_buttons()
+        # 根据modal选项设置是否为模式对话框
+        if modal: self.grab_set()
+        if not self.initial_focus:
+            self.initial_focus = self
+        # 为"WM_DELETE_WINDOW"协议使用self.cancel_click事件处理方法
+        self.protocol("WM_DELETE_WINDOW", self.cancel_click)
+        # 根据父窗口来设置对话框的位置
+        self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
+            parent.winfo_rooty()+50))
+        print( self.initial_focus)
+        # 让对话框获取焦点
+        self.initial_focus.focus_set()
+        self.wait_window(self)
+
+    def init_var(self):
+        self.tao0, self.mass0, self.area0, self.density0 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao1, self.mass1, self.area1, self.density1 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao2, self.mass2, self.area2, self.density2 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao3, self.mass3, self.area3, self.density3 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao4, self.mass4, self.area4, self.density4 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao5, self.mass5, self.area5, self.density5 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao6, self.mass6, self.area6, self.density6 = DoubleVar(), DoubleVar(), DoubleVar(), DoubleVar()
+        self.tao_v = [self.tao0, self.tao1, self.tao2, self.tao3, self.tao4, self.tao5, self.tao6]
+        self.massload_v = [self.mass0, self.mass1, self.mass2, self.mass3, self.mass4, self.mass5, self.mass6]
+        self.actArea_v = [self.area0, self.area1, self.area2, self.area3, self.area4, self.area5, self.area6]
+        self.density_v = [self.density0, self.density1, self.density2, self.density3, self.density4, self.density5, self.density6]
+        for t, m, a, p in zip(self.tao_v, self.massload_v, self.actArea_v, self.density_v):
+            t.set(60)
+            m.set(1)
+            a.set(1)
+            p.set(1)
+
+    # 通过该方法来创建自定义对话框的内容
+    def init_widgets(self, master):
+        # 创建第一个容器
+        fm1 = Frame(master)
+        # 该容器放在左边排列
+        fm1.pack(side=TOP, fill=BOTH, expand=NO)
+        Label(fm1, font=('StSong', 10, 'bold'), 
+            text='                                 ').pack(side=LEFT, ipadx=5, ipady=5, padx=15, pady=10)
+        # for para_tit in ['弛豫时间τ(min)', '活性物质载量(mg)', '电化学活性面积(cm^2)', '活性物质密度(g/cm^3)']:
+        for tit in self.excel_path:
+            Label(fm1, font=('StSong', 10, 'bold'), text=tit.split('/')[-1][:15]).pack(side=LEFT, padx=10, pady=10)
+
+        self.init_var()
+        self.ll = len(self.excel_path)
+
+        fm2 = Frame(master)
+        fm2.pack(side=TOP, fill=BOTH, expand=NO)
+        Label(fm2, font=('StSong', 10, 'bold'), text='       弛豫时间τ(min)       '
+        ).pack(side=LEFT, ipadx=5, ipady=5, padx=5, pady=10)
+        for t in self.tao_v[:self.ll]:
+            try:
+                ttk.Entry(fm2, textvariable=t,
+                    width=3,
+                    font=('StSong', 10, 'bold'),
+                    foreground='#8080c0').pack(side=LEFT, ipadx=5, ipady=5, padx=49, pady=10)
+            except IndexError:
+                continue
+
+        fm3 = Frame(master)
+        fm3.pack(side=TOP, fill=BOTH, expand=NO)
+        Label(fm3, font=('StSong', 10, 'bold'), text='    活性物质载量m(mg)   '
+        ).pack(side=LEFT, ipadx=5, ipady=5, padx=5, pady=10)
+        for m in self.massload_v[:self.ll]:
+            try:
+                ttk.Entry(fm3, textvariable=m,
+                    width=3,
+                    font=('StSong', 10, 'bold'),
+                    foreground='#8080c0').pack(side=LEFT, ipadx=5, ipady=5, padx=49, pady=10)
+            except IndexError:
+                continue
+
+        fm4 = Frame(master)
+        fm4.pack(side=TOP, fill=BOTH, expand=NO)
+        Label(fm4, font=('StSong', 10, 'bold'), text='电化学活性面积A(cm^2) '
+        ).pack(side=LEFT, ipadx=5, ipady=5, padx=5, pady=10)
+        for a in self.actArea_v[:self.ll]:
+            try:
+                ttk.Entry(fm4, textvariable=a,
+                    width=3,
+                    font=('StSong', 10, 'bold'),
+                    foreground='#8080c0').pack(side=LEFT, ipadx=5, ipady=5, padx=49, pady=10)
+            except IndexError:
+                continue
+
+        fm5 = Frame(master)
+        fm5.pack(side=TOP, fill=BOTH, expand=NO)
+        Label(fm5, font=('StSong', 10, 'bold'), text='活性物质密度ρ(g/cm^3) '
+        ).pack(side=LEFT, ipadx=5, ipady=5, padx=5, pady=10)
+        for p in self.density_v[:self.ll]:
+            try:
+                ttk.Entry(fm5, textvariable=p,
+                    width=3,
+                    font=('StSong', 10, 'bold'),
+                    foreground='#8080c0').pack(side=LEFT, ipadx=5, ipady=5, padx=49, pady=10)
+            except IndexError:
+                continue
+
+    # 通过该方法来创建对话框下方的按钮框
+    def init_buttons(self):
+        f = Frame(self)
+        # 创建"确定"按钮,位置绑定self.ok_click处理方法
+        w = Button(f, text="确定", width=10, command=self.ok_click, default=ACTIVE)
+        w.pack(side=LEFT, padx=5, pady=5)
+        # 创建"取消"按钮,位置绑定self.cancel_click处理方法
+        w = Button(f, text="取消", width=10, command=self.cancel_click)
+        w.pack(side=LEFT, padx=5, pady=5)
+        self.bind("<Return>", self.ok_click)
+        self.bind("<Escape>", self.cancel_click)
+        f.pack()
+    # 该方法可对用户输入的数据进行校验
+    def validate(self):
+        # 可重写该方法
+        return True
+    # 该方法可处理用户输入的数据
+    def process_input(self):
+        self.tao =[]
+        self.massload = []
+        self.actArea = []
+        self.density =[]
+        for t, m, a, p in zip(self.tao_v[:self.ll], self.massload_v[:self.ll], self.actArea_v[:self.ll], self.density_v[:self.ll]):
+            self.tao.append(t.get())
+            self.massload.append(m.get())
+            self.actArea.append(a.get())
+            self.density.append(p.get())
+
+    def ok_click(self, event=None):
+        # print('确定')
+        # 如果不能通过校验，让用户重新输入
+        if not self.validate():
+            self.initial_focus.focus_set()
+            return
+        self.withdraw()
+        self.update_idletasks()
+        # 获取用户输入数据
+        self.process_input()
+        # 将焦点返回给父窗口
+        self.parent.focus_set()
+        # 销毁自己
+        self.destroy()
+    def cancel_click(self, event=None):
+        # print('取消')
+        # 将焦点返回给父窗口
+        self.parent.focus_set()
+        # 销毁自己
+        self.destroy()
