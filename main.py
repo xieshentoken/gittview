@@ -4,15 +4,17 @@ from collections import OrderedDict
 from tkinter import *
 from tkinter import colorchooser, filedialog, messagebox, simpledialog, ttk
 
+import matplotlib
+matplotlib.use("TkAgg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import scipy.signal as signal
 import xlrd
 
 from GUI import App
 from process import Gitt
 
+matplotlib.rcParams['font.sans-serif'] = ['SimHei']
 
 def main():
     root = Tk()
