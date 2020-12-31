@@ -317,12 +317,12 @@ class App():
             color5 = self.loop_pick_color(color0, 7.3)
             fig, axs = plt.subplots(2, 2)
             for i, excel_path, example, result in zip(range(0,len(self.excel_path)), self.excel_path, self.examples, self.results):
-                color00 = self.loop_pick_color(color0, i)
-                color11 = self.loop_pick_color(color1, i)
-                color22 = self.loop_pick_color(color2, i)
-                color33 = self.loop_pick_color(color3, i)
-                color44 = self.loop_pick_color(color4, i)
-                color55 = self.loop_pick_color(color5, i)
+                color00 = self.loop_pick_color(color0, 1.46*i)
+                color11 = self.loop_pick_color(color1, 1.46*i)
+                color22 = self.loop_pick_color(color2, 1.46*i)
+                color33 = self.loop_pick_color(color3, 1.46*i)
+                color44 = self.loop_pick_color(color4, 1.46*i)
+                color55 = self.loop_pick_color(color5, 1.46*i)
                 axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], 
                 label=excel_path.split('/')[-1][:15], color=color00, alpha=0.5)
                 axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], 
