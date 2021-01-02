@@ -205,14 +205,16 @@ class App():
             color00 = self.loop_pick_color(color0, i)
             color11 = self.loop_pick_color(color1, i)
             axs[0].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电压/V'], 
-            color=color00, linewidth = 1, alpha=0.5, label=excel_path.split('/')[-1][:15])
+            color=color00, linewidth = 1, alpha=0.5, label=self.excel_path[i].split('/')[-1][:15])
             axs[1].plot(example.pristine_data['测试时间/Sec'], example.pristine_data['电流/mA'], 
-            color=color11, linewidth = 1, alpha=0.5, label=excel_path.split('/')[-1][:15])
+            color=color11, linewidth = 1, alpha=0.5, label=self.excel_path[i].split('/')[-1][:15])
         axs[0].set_xlabel('time (sec)')
         axs[0].set_ylabel('Potential (V)')
         axs[1].set_xlabel('time (sec)')
         axs[1].set_ylabel('Currents (mA)')
         axs[1].grid(False)
+        for ax in axs.flat:
+            ax.legend()
         fig.tight_layout()
         plt.show()
 
