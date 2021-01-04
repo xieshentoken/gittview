@@ -11,7 +11,7 @@ import pandas as pd
 import xlrd
 
 from process import Gitt
-
+from hslrgb import *
 
 class App():
     def __init__(self, master):
@@ -319,12 +319,12 @@ class App():
             color5 = self.loop_pick_color(color0, 7.3)
             fig, axs = plt.subplots(2, 2)
             for i, excel_path, example, result in zip(range(0,len(self.excel_path)), self.excel_path, self.examples, self.results):
-                color00 = self.loop_pick_color(color0, 1.46*i)
-                color11 = self.loop_pick_color(color1, 1.46*i)
-                color22 = self.loop_pick_color(color2, 1.46*i)
-                color33 = self.loop_pick_color(color3, 1.46*i)
-                color44 = self.loop_pick_color(color4, 1.46*i)
-                color55 = self.loop_pick_color(color5, 1.46*i)
+                color00 = self.loop_pick_color(color0, i)
+                color11 = self.loop_pick_color(color1, i)
+                color22 = self.loop_pick_color(color2, i)
+                color33 = self.loop_pick_color(color3, i)
+                color44 = self.loop_pick_color(color4, i)
+                color55 = self.loop_pick_color(color5, i)
                 axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], 
                 label=excel_path.split('/')[-1][:15], color=color00, alpha=0.5)
                 axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], 
@@ -391,14 +391,9 @@ class App():
 
     # 在色环上隔80˚取色,仅改变色相，不改变明度和饱和度
     def loop_pick_color(self, color, i):
-        val_10 = (int(color[1:3], 16)+int(56*i))%256
-        if len(str(hex(val_10))) == 4:
-            picked_color = '#'+str(hex(val_10))[2:]+color[3:]
-        elif len(str(hex(val_10))) == 3:
-            picked_color = '#'+'0'+str(hex(val_10))[-1]+color[3:]
-        else:
-            picked_color = color
-            print(str(hex(val_10)))
+        hsl = toHSL(color)
+        loop_h = (hsl[0] + 81*i)%360
+        picked_color = toRGB([loop_h, hsl[1], hsl[2]])
         return picked_color
 
     def select_color(self):
