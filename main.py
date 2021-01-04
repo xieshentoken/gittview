@@ -13,6 +13,7 @@ import xlrd
 
 from GUI import App
 from process import Gitt
+from hslrgb import *
 
 matplotlib.rcParams['font.sans-serif'] = ['SimHei']
 
