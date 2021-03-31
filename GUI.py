@@ -20,7 +20,7 @@ class App():
 
         self.excel_path = tuple()
         self.examples = []    # 用于保存实例化对象
-        self.tao = [60,60,60,60,60,60,60]  # 弛豫时间，单位：分钟min
+        self.tao = [60,60,60,60,60,60,60]  # 脉冲时间，单位：分钟min
         self.massload = [1,1,1,1,1,1,1]    # 活性物质载量，单位：毫克mg
         self.actarea = [1,1,1,1,1,1,1]     # 电化学活性面积，单位：平方厘米cm^2
         self.density = [1,1,1,1,1,1,1]     # 活性物质的密度，单位：立方厘米每克cm^3/g
@@ -410,10 +410,10 @@ class App():
     def show_help(self):
         messagebox.showinfo(title='关于',message='离子导率由Fick第二定律导出：\n' +
             'Dion = (4/π)*n*(m/A^2/ρ^2)*1/τ*(ΔEs/ΔEτ)^2\n' + 'n：反应过程参与电子数\n' + 
-            'A：电化学活性面积\n' + 'τ：弛豫时间\n' + 'ΔEs：弛豫终压差\n' + 'ΔEτ：脉冲电势差')
+            'A：电化学活性面积\n' + 'τ：脉冲时间\n' + 'ΔEs：弛豫终压差\n' + 'ΔEτ：脉冲电势差')
 
     # 自定义对话框类，继承Toplevel------------------------------------------------------------------------------------------
-    # 创建弹窗，用于输入各测试数据文件下的其他测试参数：弛豫时间、质量载量、电化学活性面积和活性物质密度
+    # 创建弹窗，用于输入各测试数据文件下的其他测试参数：脉冲时间、质量载量、电化学活性面积和活性物质密度
 class TestPara(Toplevel):
     # 定义构造方法
     def __init__(self, parent, excel_path, title = '输入各数据下对应测试参数', modal=False):
@@ -470,7 +470,7 @@ class TestPara(Toplevel):
         fm1.pack(side=TOP, fill=BOTH, expand=NO)
         Label(fm1, font=('StSong', 10, 'bold'), 
             text='                                 ').pack(side=LEFT, ipadx=5, ipady=5, padx=15, pady=10)
-        # for para_tit in ['弛豫时间τ(min)', '活性物质载量(mg)', '电化学活性面积(cm^2)', '活性物质密度(g/cm^3)']:
+        # for para_tit in ['脉冲时间τ(min)', '活性物质载量(mg)', '电化学活性面积(cm^2)', '活性物质密度(g/cm^3)']:
         for tit in self.excel_path:
             Label(fm1, font=('StSong', 10, 'bold'), text=tit.split('/')[-1][:15]).pack(side=LEFT, padx=10, pady=10)
 
@@ -479,7 +479,7 @@ class TestPara(Toplevel):
 
         fm2 = Frame(master)
         fm2.pack(side=TOP, fill=BOTH, expand=NO)
-        Label(fm2, font=('StSong', 10, 'bold'), text='       弛豫时间τ(min)       '
+        Label(fm2, font=('StSong', 10, 'bold'), text='       脉冲时间τ(min)       '
         ).pack(side=LEFT, ipadx=5, ipady=5, padx=5, pady=10)
         for t in self.tao_v[:self.ll]:
             try:
