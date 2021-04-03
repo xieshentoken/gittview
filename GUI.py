@@ -13,6 +13,7 @@ import xlrd
 from process import Gitt
 from hslrgb import *
 
+
 class App():
     def __init__(self, master):
         self.master = master
@@ -20,7 +21,7 @@ class App():
 
         self.excel_path = tuple()
         self.examples = []    # 用于保存实例化对象
-        self.tao = [60,60,60,60,60,60,60]  # 脉冲时间，单位：分钟min
+        self.tao = [20,20,20,20,20,20,20]  # 脉冲时间，单位：分钟min
         self.massload = [1,1,1,1,1,1,1]    # 活性物质载量，单位：毫克mg
         self.actarea = [1,1,1,1,1,1,1]     # 电化学活性面积，单位：平方厘米cm^2
         self.density = [1,1,1,1,1,1,1]     # 活性物质的密度，单位：立方厘米每克cm^3/g
@@ -164,7 +165,7 @@ class App():
     # 新建项目
     def new_project(self):
         self.new_path()
-        self.tao = [60,60,60,60,60,60,60] 
+        self.tao = [20,20,20,20,20,20,20] 
         self.massload = [1,1,1,1,1,1,1] 
         self.actarea = [1,1,1,1,1,1,1] 
         self.density = [1,1,1,1,1,1,1] 
@@ -325,12 +326,12 @@ class App():
                 color33 = self.loop_pick_color(color3, i)
                 color44 = self.loop_pick_color(color4, i)
                 color55 = self.loop_pick_color(color5, i)
-                axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], 
-                label=excel_path.split('/')[-1][:15], color=color00, alpha=0.5)
-                axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], 
-                label=None, color=color00, alpha=0.5)
+                axs[0, 0].plot(example.discharge_data['测试时间/Sec'], example.discharge_data['电压/V'], label=excel_path.split('/')[-1][:15], 
+                color=color00, alpha=0.5)
+                axs[0, 0].plot(example.charge_data['测试时间/Sec'], example.charge_data['电压/V'], label=None, 
+                color=color00, alpha=0.5)
                 axs[0, 1].plot(result['discharge']['电压/V'], np.log10(result['discharge'][r'D/cm\+(2)·s\+(-1)']), 
-                color=color22, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
+                color=color11, marker='*', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Discharge')
                 axs[0, 1].plot(result['charge']['电压/V'], np.log10(result['charge'][r'D/cm\+(2)·s\+(-1)']), 
                 color=color33, marker='o', linestyle='solid', linewidth=2, alpha=0.5, label = excel_path.split('/')[-1][:15]+'-Charge')
                 axs[1, 0].plot(result['discharge']['Capacity(R)/mAh/g'], result['discharge']['Reaction resistance/Ohm/g'], 
@@ -381,7 +382,7 @@ class App():
 
     def input_para(self):
         if self.excel_path:
-            kk = TestPara(self.master, self.excel_path)
+            kk = TestPara(self.master, self.excel_path, self.tao, self.massload, self.actarea, self.density)
         else:
             messagebox.showinfo(title='警告',message='请检查输入文件的有效性！')
         self.tao = kk.tao
@@ -416,13 +417,17 @@ class App():
     # 创建弹窗，用于输入各测试数据文件下的其他测试参数：脉冲时间、质量载量、电化学活性面积和活性物质密度
 class TestPara(Toplevel):
     # 定义构造方法
-    def __init__(self, parent, excel_path, title = '输入各数据下对应测试参数', modal=False):
+    def __init__(self, parent, excel_path, tao, massload, actarea, density, title = '输入各数据下对应测试参数', modal=False):
         Toplevel.__init__(self, parent)
         self.transient(parent)
         # 设置标题
         if title: self.title(title)
         self.parent = parent
         self.excel_path = excel_path
+        self.tao = tao
+        self.massload = massload
+        self.actarea = actarea
+        self.density = density
         # 创建对话框的主体内容
         frame = Frame(self)
         # 调用init_widgets方法来初始化对话框界面
@@ -456,11 +461,12 @@ class TestPara(Toplevel):
         self.massload_v = [self.mass0, self.mass1, self.mass2, self.mass3, self.mass4, self.mass5, self.mass6]
         self.actArea_v = [self.area0, self.area1, self.area2, self.area3, self.area4, self.area5, self.area6]
         self.density_v = [self.density0, self.density1, self.density2, self.density3, self.density4, self.density5, self.density6]
-        for t, m, a, p in zip(self.tao_v, self.massload_v, self.actArea_v, self.density_v):
-            t.set(60)
-            m.set(1)
-            a.set(1)
-            p.set(1)
+        for t, m, a, p, tt, mm, aa, pp in zip(self.tao_v, self.massload_v, self.actArea_v, self.density_v, 
+                              self.tao, self.massload, self.actarea, self.density):
+            t.set(tt)
+            m.set(mm)
+            a.set(aa)
+            p.set(pp)
 
     # 通过该方法来创建自定义对话框的内容
     def init_widgets(self, master):
