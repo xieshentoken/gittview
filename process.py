@@ -7,6 +7,8 @@ class Gitt():
 
     def read_data(self):
         data = pd.read_excel(self.path, sheet_name = '记录表')
+        data.dropna(axis=0, inplace=True)
+        data.reset_index(drop=True, inplace=True)
         t = data['测试时间/Sec']
         data['测试时间/Sec'] = data['测试时间/Sec'] - t.iloc[0]
         self.pristine_data = data
