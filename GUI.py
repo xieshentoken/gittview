@@ -186,7 +186,8 @@ class App():
         # 调用askopenfile方法获取打开的文件名
         self.excel_path = filedialog.askopenfilenames(title='选择一个或多个excel文件',
             filetypes=[('Excel文件', '*.xlsx'), ('Excel 文件', '*.xls')], # 只处理的文件类型
-            initialdir=r'C:/Users/Administrator/Desktop') # 初始目录
+            # initialdir=r'C:/Users/Administrator/Desktop') # 初始目录
+            initialdir=r'G:\测试结果\battery\NiSSe\GITT') # 初始目录
         self.excel_adr.set(self.excel_path)
 
     def preview(self):
@@ -400,6 +401,7 @@ class App():
     def select_color(self):
         self.hsl = colorchooser.askcolor(parent=self.master, title='选择线条颜色',
             color = '#B03060')
+        print(self.hsl[1],type(self.hsl[1]))
 
     def IR_set(self):
         self.customize_Constant = simpledialog.askinteger('输入参数', '选取IR降位置',
